@@ -1,0 +1,3 @@
+startup --output_user_root=C:/tmp
+startup --windows_enable_symlinks
+build --enable_runfiles
