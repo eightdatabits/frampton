@@ -4,7 +4,7 @@
 #include <SPI.h>         // COMMENT OUT THIS LINE FOR GEMMA OR TRINKET
 //#include <avr/power.h> // ENABLE THIS LINE FOR GEMMA OR TRINKET
 
-#define NUMPIXELS 20 // Number of LEDs in strip
+#define NUMPIXELS 300 // Number of LEDs in strip (16.4ft)
 
 // Here's how to control the LEDs from any two pins:
 #define DATAPIN    20
@@ -217,23 +217,16 @@ static const size_t GammaTableLength = sizeof(GammaTable)/sizeof(GammaTable[0]);
 // Runs 10 LEDs at a time along strip, cycling through red, green and blue.
 // This requires about 200 mA for all the 'on' pixels + 1 mA per 'off' pixel.
 
-int      head  = 0, tail = -10; // Index of first 'on' and 'off' pixels
+int      head  = 0, tail = -NUMPIXELS; // Index of first 'on' and 'off' pixels
 uint32_t tick = 0;
 uint32_t color = 0xFFFFFF; //(DotStarGammaTable[222]<<16) /*G*/ + (DotStarGammaTable[255]<<8) /*R*/ + DotStarGammaTable[173] /*B*/;      // 'On' color (G,R,B). warm whiteRGB = #F6E7D2 (246,231,210). moccasinRGB (255,228,181). navajo whiteRGB (255,222,173)
 
 void loop() {
-  //strip.setPixelColor(head, color); // 'On' pixel at head
-  //strip.setPixelColor(tail, 0);     // 'Off' pixel at tail
-  slowBreathe(&strip, 0, 10, 255, tick);
+  //chase(&strip);
+  slowBreathe(&strip, 0, NUMPIXELS, 255, tick);
   strip.show();                     // Refresh strip
   delay(10);                        // Pause 10 milliseconds (~100 FPS)
 
-/*
-  if(++head >= NUMPIXELS) {         // Increment head index.  Off end of strip?
-    head = 0;                       //  Yes, reset head index to start
-  }
-  if(++tail >= NUMPIXELS) tail = 0; // Increment, reset tail index
-  */
   tick++;
 }
 
@@ -249,6 +242,17 @@ uint32_t valueToColor(uint32_t value) {
   return color;
 }
 
+void chase(Adafruit_DotStar* p_strip) {
+  p_strip->setPixelColor(head, color); // 'On' pixel at head
+  p_strip->setPixelColor(tail, 0);     // 'Off' pixel at tail
+
+  if(++head >= NUMPIXELS) {         // Increment head index.  Off end of strip?
+    head = 0;                       //  Yes, reset head index to start
+  }
+  if(++tail >= NUMPIXELS) {
+    tail = 0; // Increment, reset tail index
+  }
+}
 void slowBreathe(Adafruit_DotStar* p_strip, uint16_t start_pixel, uint16_t num_pixels, uint8_t max_brightness, uint32_t tick) {
   uint32_t index = tick%SineTableLength;
   uint32_t value = SineTable[index];
